@@ -1,0 +1,18 @@
+[project]
+name = "fiap-tech-challenge-fase-3"
+version = "0.1.0"
+description = "Tech challenge da fase 3 da pós tech em Engenharia de Machine Learning da FIAP"
+readme = "README.md"
+requires-python = ">=3.14"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.16.4",
+    "taskipy>=1.14.1",
+]
+
+
+[tool.taskipy.tasks]
+lint = "ruff check src/ tests/"
+lint-fix = "ruff check src/ tests/ --fix"
