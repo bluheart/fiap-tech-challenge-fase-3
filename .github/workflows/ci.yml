@@ -6,8 +6,6 @@ on:
   pull_request:
     branches: [ main ]
 
-env:
-    PYTHON_VERSION: '3.13'
 
 jobs:
   lint-code:
@@ -15,11 +13,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-
-      - name: Install Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: $PYTHON_VERSION
     
       - name: Install uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
@@ -36,11 +29,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-
-      - name: Install Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: $PYTHON_VERSION
     
       - name: Install uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
