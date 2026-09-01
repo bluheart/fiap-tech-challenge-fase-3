@@ -1,6 +1,7 @@
 import pandas as pd
 from datasets import load_dataset
 import os
+from pathlib import Path
 
 def prepare_clinical_dataset():
     print("Carregando o dataset Texto Clinico Brasileiro...")
@@ -25,12 +26,13 @@ def prepare_clinical_dataset():
     # Renomeia a coluna 'text' para 'texto' para corresponder ao esperado pela DAG
     df_final.rename(columns={'text': 'texto'}, inplace=True)
 
-    # Cria o diretório de destino, se não existir
-    os.makedirs('/opt/airflow/data', exist_ok=True)
-    output_path = '/opt/airflow/data/laudos_treinamento.csv'
-
+    script_dir = Path(__file__).parent.absolute()
+    output_path = script_dir.parent / 'data'
+    output_path.mkdir(parents=True, exist_ok=True)
     # Salva como CSV
-    df_final.to_csv(output_path, index=False)
+    data_path = output_path / 'laudos_treinamento.csv'
+
+    df_final.to_csv(data_path, index=False)
     print(f"Dataset preparado e salvo em: {output_path}")
     print(f"Shape do dataset final: {df_final.shape}")
 

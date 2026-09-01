@@ -1,19 +1,33 @@
-from datetime import datetime, timedelta
+import logging
+from datetime import timedelta
 from pathlib import Path
-from airflow import DAG
-from airflow.operators.python import PythonOperator # type: ignore
-import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.ensemble import RandomForestClassifier
+
 import joblib
-import os
+import pandas as pd
+from airflow import DAG
+from airflow.operators.python import PythonOperator  # type: ignore
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+logger = logging.getLogger(__name__)
+
+def alert_failure(context):
+    """Callback chamado quando task falha (substitua por Slack/PagerDuty em prod)."""
+    ti = context["task_instance"]
+    logger.error(
+        "🚨 ALERTA: Task %s falhou na DAG %s (run %s). Log: %s",
+        ti.task_id, ti.dag_id, ti.run_id, ti.log_url,
+    )
 
 default_args = {
-    'owner': 'ml-team',
+    'owner': 'caio',
     'depends_on_past': False,
-    'start_date': datetime(2024, 1, 1),
     'retries': 2,
     'retry_delay': timedelta(minutes=5),
+    "retry_exponential_backoff": True,
+    "max_retry_delay": timedelta(minutes=10),
+    "execution_timeout": timedelta(hours=1),
+    "on_failure_callback": alert_failure,
 }
 
 DATA_DIR = Path("/tmp/ml_pipeline")

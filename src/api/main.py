@@ -16,8 +16,8 @@ ERRORS = Counter("http_errors_total", "Total HTTP errors", ["method", "endpoint"
 try:
     model = joblib.load("../models/model.pkl")
     vectorizer = joblib.load("../models/vectorizer.pkl")
-except Exception as e:
-    print("Error loading model")
+except Exception as e: # noqa: BLE001
+    print(f"Error loading model: {e}")
 
 
 class LaudoRequest(BaseModel):
