@@ -1,11 +1,10 @@
+# api/main.py
 import joblib
 import numpy as np
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import Response
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
-from pydantic import BaseModel, ValidationError
-from sklearn.exceptions import NotFittedError
-import traceback
+from pydantic import BaseModel
 
 app = FastAPI(title="Medical Triage API", version="1.0.0")
 
@@ -41,14 +40,9 @@ async def predict(request: LaudoRequest):
                 classificacao=pred,
                 confianca=float(np.max(proba))
             )
-    except (AttributeError, ValueError, TypeError, NotFittedError) as e:
+    except Exception as e: # noqa: BLE001
         ERRORS.labels(method="POST", endpoint="/predict", status="500").inc()
-        raise HTTPException(status_code=500, detail=f"Model prediction error: {str(e)}")
-    except Exception as e:
-        # Log the unexpected error with traceback for debugging
-        print(f"Unexpected error: {traceback.format_exc()}")
-        ERRORS.labels(method="POST", endpoint="/predict", status="500").inc()
-        raise HTTPException(status_code=500, detail="An unexpected error occurred")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/metrics")
 async def get_metrics():
