@@ -3,13 +3,17 @@ name = "fiap-tech-challenge-fase-3"
 version = "0.1.0"
 description = "Tech challenge da fase 3 da pós tech em Engenharia de Machine Learning da FIAP"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.13"
 dependencies = [
+    "apache-airflow>=3.2.2",
+    "datasets>=5.0.1",
     "fastapi>=0.141.1",
     "joblib>=1.6.0",
     "numpy>=2.5.2",
+    "pandas>=3.0.5",
     "prometheus-client>=0.26.0",
     "pydantic>=2.13.5",
+    "scikit-learn>=1.9.0",
     "uvicorn>=0.52.4",
 ]
 

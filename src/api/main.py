@@ -1,4 +1,3 @@
-# api/main.py
 import joblib
 import numpy as np
 from fastapi import FastAPI, HTTPException
@@ -14,8 +13,11 @@ LATENCY = Histogram("http_request_duration_seconds", "HTTP request latency", ["m
 ERRORS = Counter("http_errors_total", "Total HTTP errors", ["method", "endpoint", "status"])
 
 
-model = joblib.load("../models/model.pkl")
-vectorizer = joblib.load("../models/vectorizer.pkl")
+try:
+    model = joblib.load("../models/model.pkl")
+    vectorizer = joblib.load("../models/vectorizer.pkl")
+except Exception as e:
+    print("Error loading model")
 
 
 class LaudoRequest(BaseModel):
