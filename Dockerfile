@@ -1,4 +1,4 @@
-FROM python:3.14-slim
+FROM python:3.13-slim
 
 WORKDIR /app
 
@@ -16,7 +16,13 @@ COPY pyproject.toml uv.lock ./
 
 RUN uv sync --no-dev
 
-COPY src/ src/
+# Copiar código da aplicação
+COPY app/ ./app/
+COPY models/ ./models/
+COPY data/ ./data/
+
+# Criar diretório para logs
+RUN mkdir -p /app/logs
 
 EXPOSE 8000
 
