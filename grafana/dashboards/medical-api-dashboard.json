@@ -1,0 +1,261 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "medical-api",
+    "title": "Medical Text Classifier API Dashboard",
+    "tags": ["api", "medical", "ml"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Total Requests",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 8, "x": 0, "y": 0},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "targets": [
+          {
+            "expr": "sum(rate(api_requests_total[5m])) * 300",
+            "legendFormat": "Requests",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": ["lastNotNull"],
+            "fields": "",
+            "values": false
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 1000},
+                {"color": "red", "value": 5000}
+              ]
+            },
+            "unit": "short"
+          },
+          "overrides": []
+        }
+      },
+      {
+        "id": 2,
+        "title": "Request Rate (req/s)",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 8, "y": 0},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "targets": [
+          {
+            "expr": "sum(rate(api_requests_total[5m]))",
+            "legendFormat": "Requests/s",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(api_requests_total{endpoint=\"/predict\"}[5m]))",
+            "legendFormat": "Predictions/s",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {
+              "axisCenteredZero": false,
+              "axisColorMode": "text",
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+              "lineInterpolation": "linear",
+              "lineWidth": 2,
+              "pointSize": 5,
+              "scaleDistribution": {"type": "linear"},
+              "showPoints": "never",
+              "spanNulls": false,
+              "stacking": {"group": "A", "mode": "none"},
+              "thresholdsStyle": {"mode": "off"}
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 10},
+                {"color": "red", "value": 50}
+              ]
+            },
+            "unit": "reqps"
+          },
+          "overrides": []
+        }
+      },
+      {
+        "id": 3,
+        "title": "Latency (ms)",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(api_request_duration_seconds_bucket[5m])) by (le)) * 1000",
+            "legendFormat": "P50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.90, sum(rate(api_request_duration_seconds_bucket[5m])) by (le)) * 1000",
+            "legendFormat": "P90",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(api_request_duration_seconds_bucket[5m])) by (le)) * 1000",
+            "legendFormat": "P99",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {
+              "axisCenteredZero": false,
+              "axisColorMode": "text",
+              "axisLabel": "Latency",
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+              "lineInterpolation": "smooth",
+              "lineWidth": 2,
+              "pointSize": 5,
+              "scaleDistribution": {"type": "linear"},
+              "showPoints": "never",
+              "spanNulls": false,
+              "stacking": {"group": "A", "mode": "none"},
+              "thresholdsStyle": {"mode": "off"}
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 100},
+                {"color": "red", "value": 500}
+              ]
+            },
+            "unit": "ms"
+          },
+          "overrides": []
+        }
+      },
+      {
+        "id": 4,
+        "title": "Error Rate",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 8, "y": 8},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "targets": [
+          {
+            "expr": "sum(rate(api_errors_total[5m])) / sum(rate(api_requests_total[5m])) * 100",
+            "legendFormat": "Error Rate (%)",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {
+              "axisCenteredZero": false,
+              "axisColorMode": "text",
+              "axisLabel": "Error Rate",
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 20,
+              "gradientMode": "opacity",
+              "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+              "lineInterpolation": "linear",
+              "lineWidth": 2,
+              "pointSize": 5,
+              "scaleDistribution": {"type": "linear"},
+              "showPoints": "never",
+              "spanNulls": false,
+              "stacking": {"group": "A", "mode": "none"},
+              "thresholdsStyle": {"mode": "off"}
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 1},
+                {"color": "red", "value": 5}
+              ]
+            },
+            "unit": "percent"
+          },
+          "overrides": []
+        }
+      },
+      {
+        "id": 5,
+        "title": "Model Status",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 4, "x": 0, "y": 12},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "targets": [
+          {
+            "expr": "model_loaded",
+            "legendFormat": "Model Loaded",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "background",
+          "graphMode": "none",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": ["lastNotNull"],
+            "fields": "",
+            "values": false
+          },
+          "textMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "mappings": [
+              {"options": {"0": {"text": "Not Loaded"}, "1": {"text": "Loaded"}}, "type": "value"}
+            ],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "green", "value": 1}
+              ]
+            }
+          },
+          "overrides": []
+        }
+      }
+    ]
+  },
+  "overwrite": true
+}

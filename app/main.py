@@ -1,77 +1,71 @@
-import pickle
-import time
-
-import numpy as np
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from fastapi.responses import Response
-from prometheus_client import Counter, Histogram, generate_latest
-from pydantic import BaseModel
+import time
+import logging
+from .model import MedicalTextClassifier
+from .schemas import TextInput, PredictionResponse
+from .metrics import setup_metrics
+import joblib
+import os
 
-app = FastAPI(title="Medical Triage API")
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# Métricas Prometheus
-REQUEST_COUNT = Counter('http_requests_total', 'Total HTTP requests', ['method', 'endpoint', 'status'])
-REQUEST_DURATION = Histogram('http_request_duration_seconds', 'HTTP request duration', ['method', 'endpoint'])
-PREDICTION_COUNT = Counter('predictions_total', 'Total predictions', ['classification'])
+# Initialize FastAPI app
+app = FastAPI(
+    title="Medical Text Classifier API",
+    description="API for classifying medical texts by urgency",
+    version="1.0.0"
+)
 
-class MedicalReport(BaseModel):
-    text: str
-    patient_id: str | None = None
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-class PredictionResponse(BaseModel):
-    classification: str
-    confidence: float
-    latency_ms: float
-    model_version: str
+# Setup metrics
+setup_metrics(app)
 
-# Carregar modelo
+# Model path
+MODEL_PATH = os.getenv("MODEL_PATH", "/app/models/classifier.joblib")
+
+# Load model
 try:
-    with open('models/original_model.pkl', 'rb') as f:
-        model_data = pickle.load(f)
-        MODEL = model_data['model']
-        VECTORIZER = model_data['vectorizer']
-        MODEL_VERSION = model_data.get('version', '1.0.0')
-except FileNotFoundError:
-    MODEL = None
-    VECTORIZER = None
-    MODEL_VERSION = 'not_loaded'
+    classifier = MedicalTextClassifier(MODEL_PATH)
+    logger.info(f"Model loaded from {MODEL_PATH}")
+except Exception as e:
+    logger.error(f"Failed to load model: {e}")
+    classifier = None
 
 @app.get("/")
-def read_root():
-    return {"status": "healthy", "model_version": MODEL_VERSION}
+async def root():
+    return {"message": "Medical Text Classifier API", "status": "healthy"}
 
-@app.get("/metrics")
-def metrics():
-    return Response(generate_latest(), media_type="text/plain")
+@app.get("/health")
+async def health_check():
+    if classifier is None:
+        return {"status": "unhealthy", "model_loaded": False}
+    return {"status": "healthy", "model_loaded": True}
 
 @app.post("/predict", response_model=PredictionResponse)
-async def predict(report: MedicalReport):
-    start_time = time.time()
-    
-    if MODEL is None:
+async def predict(input_data: TextInput):
+    if classifier is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
     
     try:
-        # Pré-processamento
-        text_vectorized = VECTORIZER.transform([report.text]) # type: ignore
-        
-        # Predição
-        prediction = MODEL.predict(text_vectorized)[0]
-        probability = np.max(MODEL.predict_proba(text_vectorized)[0])
-        
-        latency = (time.time() - start_time) * 1000
-        
-        # Registrar métricas
-        PREDICTION_COUNT.labels(classification=prediction).inc()
-        REQUEST_DURATION.labels(method='POST', endpoint='/predict').observe(time.time() - start_time)
-        REQUEST_COUNT.labels(method='POST', endpoint='/predict', status='200').inc()
-        
-        return PredictionResponse(
-            classification=prediction,
-            confidence=float(probability),
-            latency_ms=round(latency, 2),
-            model_version=MODEL_VERSION
-        )
-    except Exception as e: #noqa: BLE001
-        REQUEST_COUNT.labels(method='POST', endpoint='/predict', status='500').inc()
+        result = classifier.predict(input_data.text)
+        return result
+    except Exception as e:
+        logger.error(f"Prediction error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/metrics")
+async def metrics():
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)

@@ -16,10 +16,11 @@ COPY pyproject.toml uv.lock ./
 
 RUN uv sync --no-dev
 
-# Copiar código da aplicação
-COPY app/ ./app/
-COPY models/ ./models/
-COPY data/ ./data/
+# Copy application
+COPY . .
+
+# Create models directory
+RUN mkdir -p /app/models
 
 # Criar diretório para logs
 RUN mkdir -p /app/logs
