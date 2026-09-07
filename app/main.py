@@ -1,14 +1,14 @@
+import logging
+import os
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from fastapi.responses import Response
-import time
-import logging
-from .model import MedicalTextClassifier
-from .schemas import TextInput, PredictionResponse
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+
 from .metrics import setup_metrics
-import joblib
-import os
+from .model import MedicalTextClassifier
+from .schemas import PredictionResponse, TextInput
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -40,7 +40,7 @@ MODEL_PATH = os.getenv("MODEL_PATH", "/app/models/classifier.joblib")
 try:
     classifier = MedicalTextClassifier(MODEL_PATH)
     logger.info(f"Model loaded from {MODEL_PATH}")
-except Exception as e:
+except Exception as e: #noqa: BLE001
     logger.error(f"Failed to load model: {e}")
     classifier = None
 
@@ -62,7 +62,7 @@ async def predict(input_data: TextInput):
     try:
         result = classifier.predict(input_data.text)
         return result
-    except Exception as e:
+    except Exception as e: #noqa: BLE001
         logger.error(f"Prediction error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 

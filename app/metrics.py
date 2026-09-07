@@ -1,6 +1,7 @@
-from prometheus_client import Counter, Histogram, Gauge
-from fastapi import FastAPI, Request
 import time
+
+from fastapi import FastAPI, Request
+from prometheus_client import Counter, Gauge, Histogram
 
 # Define metrics
 REQUESTS_TOTAL = Counter(
