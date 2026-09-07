@@ -16,8 +16,6 @@ COPY pyproject.toml uv.lock ./
 
 RUN uv sync --no-dev
 
-ENV PATH="/app/.venv/bin:$PATH"
-
 # Copy application
 COPY . .
 
@@ -29,4 +27,4 @@ RUN mkdir -p /app/logs
 
 EXPOSE 8000
 
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/app/.venv/bin/uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
