@@ -16,6 +16,8 @@ COPY pyproject.toml uv.lock ./
 
 RUN uv sync --no-dev
 
+ENV PATH="/app/.venv/bin:$PATH"
+
 # Copy application
 COPY . .
 
