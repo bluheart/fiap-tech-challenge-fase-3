@@ -27,7 +27,12 @@ def prepare_clinical_dataset():
     df_final.rename(columns={'text': 'texto'}, inplace=True)
 
     script_dir = Path(__file__).parent.absolute()
+
+
+    output_path = script_dir.parent / 'shared/data'
+
     output_path = script_dir.parent / 'data'
+    
     output_path.mkdir(parents=True, exist_ok=True)
     # Salva como CSV
     data_path = output_path / 'laudos_treinamento.csv'
