@@ -20,6 +20,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "ipykernel>=7.3.0",
     "pre-commit>=4.6.2",
     "pytest>=9.1.1",
     "ruff>=0.16.4",
@@ -30,3 +31,6 @@ dev = [
 [tool.taskipy.tasks]
 lint = "ruff check src/ tests/"
 lint-fix = "ruff check src/ tests/ --fix"
+
+[tool.ruff.lint]
+ignore = ["BLE001"]
