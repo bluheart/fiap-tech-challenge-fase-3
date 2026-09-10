@@ -48,7 +48,9 @@ services:
 
 
   airflow-init:
-    image: apache/airflow:3.3.1
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
     container_name: airflow-init
     environment:
       - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS=admin:admin
@@ -73,7 +75,9 @@ services:
 
 
   airflow-apiserver:                      
-    image: apache/airflow:3.3.1         
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
     container_name: airflow-apiserver
     ports:
       - "8080:8080"
@@ -98,7 +102,9 @@ services:
 
 
   airflow-scheduler:
-    image: apache/airflow:3.3.1
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
     container_name: airflow-scheduler
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
@@ -121,7 +127,9 @@ services:
 
 
   airflow-dag-processor:
-    image: apache/airflow:3.3.1
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
     container_name: airflow-dag-processor
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
