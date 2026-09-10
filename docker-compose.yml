@@ -187,6 +187,7 @@ volumes:
   prometheus_data:
   grafana_data:
   airflow_db:
+  postgres_data:
 
 networks:
   monitoring:
