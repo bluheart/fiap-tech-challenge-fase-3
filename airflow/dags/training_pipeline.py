@@ -57,18 +57,7 @@ def load_data(**context):
         logger.info(f"Colunas: {df.columns.tolist()}")
         
         # Verificar colunas necessárias
-        required_columns = ['texto', 'target']
-        for col in required_columns:
-            if col not in df.columns:
-                # Tentar mapear colunas comuns
-                if col == 'texto' and 'text' in df.columns:
-                    df['texto'] = df['text']
-                elif col == 'texto' and 'laudo' in df.columns:
-                    df['texto'] = df['laudo']
-                elif col == 'texto' and 'descricao' in df.columns:
-                    df['texto'] = df['descricao']
-                else:
-                    raise ValueError(f"Coluna '{col}' não encontrada no dataset")
+        required_columns = ['texto', 'classificacao']
         
         # Salvar cópia no volume compartilhado para a API
         df.to_parquet(SHARED_DATA_PATH + '/laudos_treinamento.parquet', index=False)
