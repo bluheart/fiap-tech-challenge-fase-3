@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 from airflow.providers.standard.operators.empty import EmptyOperator
 from airflow.providers.standard.operators.python import PythonOperator
+from datasets import load_dataset
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
@@ -20,11 +21,14 @@ from airflow import DAG
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+ROOT_PATH = Path(__file__).parent.absolute().parent.parent
 # Caminhos compartilhados (volumes Docker)
-SHARED_DATA_PATH = '/shared/data'
-SHARED_MODELS_PATH = '/shared/models'
-SHARED_VECTORIZERS_PATH = '/shared/vectorizers'
+SHARED_DATA_PATH = ROOT_PATH / 'shared/data'
+SHARED_MODELS_PATH = ROOT_PATH / 'shared/models'
+SHARED_VECTORIZERS_PATH = ROOT_PATH / 'shared/vectorizers'
 LOCAL_DATA_PATH = '/opt/airflow/data/laudos_treinamento.csv'
+
+print()
 
 # Garantir que os diretórios existam
 for path in [SHARED_DATA_PATH, SHARED_MODELS_PATH, SHARED_VECTORIZERS_PATH]:
@@ -34,19 +38,39 @@ default_args = {
     'owner': 'medical_ai_team',
     'depends_on_past': False,
     'start_date': datetime(2026, 9, 1, tzinfo=ZoneInfo("America/Sao_Paulo")),
-    'email': ['alerts@hospital.com'],
-    'email_on_failure': True,
-    'email_on_retry': False,
     'retries': 2,
     'retry_delay': timedelta(minutes=5),
 }
+
+
+def generate_dataset(**context):
+    """Executa o script de geração de dataset"""
+    ds = load_dataset("fabianonbfilho/texto-clinico-brasileiro", split="train")
+    ds.set_format(type="pandas")
+    df = ds[:]
+
+    specialties_urgent = ['Cardiologista', 'Neurologista', 'Oncologista']
+    df['classificacao'] = df['specialty'].apply(
+        lambda x: 'urgente' if x in specialties_urgent else 'normal'
+    )
+    df_final = df[['text', 'classificacao']]
+
+    # Renomeia a coluna 'text' para 'texto' para corresponder ao esperado pela DAG
+    df_final.rename(columns={'text': 'texto'}, inplace=True)
+    
+    SHARED_DATA_PATH.mkdir(parents=True, exist_ok=True)
+    # Salva como CSV
+    data_path = SHARED_DATA_PATH / 'laudos_treinamento.csv'
+
+    df_final.to_csv(data_path, index=False)
+
 
 def load_data(**context):
     """Carregar dados médicos para treinamento do CSV compartilhado"""
     try:
         # Tentar carregar do volume compartilhado primeiro
-        if os.path.exists(SHARED_DATA_PATH + '/laudos_treinamento.csv'):
-            data_path = SHARED_DATA_PATH + '/laudos_treinamento.csv'
+        if os.path.exists(SHARED_DATA_PATH  / 'laudos_treinamento.csv'):
+            data_path = SHARED_DATA_PATH / 'laudos_treinamento.csv'
             logger.info(f"Carregando dados do volume compartilhado: {data_path}")
         elif os.path.exists(LOCAL_DATA_PATH):
             data_path = LOCAL_DATA_PATH
@@ -74,7 +98,7 @@ def load_data(**context):
                     raise ValueError(f"Coluna '{col}' não encontrada no dataset")
         
         # Salvar cópia no volume compartilhado para a API
-        df.to_csv(SHARED_DATA_PATH + '/laudos_treinamento.csv', index=False)
+        df.to_csv(SHARED_DATA_PATH / 'laudos_treinamento.csv', index=False)
         logger.info(f"Dados salvos no volume compartilhado: {SHARED_DATA_PATH}")
         
         # Salvar informações no contexto
@@ -326,31 +350,33 @@ start = EmptyOperator(
     dag=dag
 )
 
+generate_data_task = PythonOperator(
+    task_id='generate_dataset',
+    python_callable=generate_dataset,
+    dag=dag
+)
+
 load_data_task = PythonOperator(
     task_id='load_data',
     python_callable=load_data,
-    provide_context=True,
     dag=dag
 )
 
 preprocess_task = PythonOperator(
     task_id='preprocess_data',
     python_callable=preprocess_data,
-    provide_context=True,
     dag=dag
 )
 
 train_task = PythonOperator(
     task_id='train_model',
     python_callable=train_model,
-    provide_context=True,
     dag=dag
 )
 
 evaluate_task = PythonOperator(
     task_id='evaluate_model',
     python_callable=evaluate_model,
-    provide_context=True,
     dag=dag
 )
 
@@ -360,4 +386,4 @@ end = EmptyOperator(
 )
 
 # Definir fluxo
-start >> load_data_task >> preprocess_task >> train_task >> evaluate_task >> end
+start >> generate_data_task >> load_data_task >> preprocess_task >> train_task >> evaluate_task >> end
