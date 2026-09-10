@@ -30,7 +30,7 @@ services:
     restart: unless-stopped
 
   airflow-webserver:
-    image: apache/airflow:2.7.3
+    image: apache/airflow:3.3.1
     container_name: airflow-webserver
     ports:
       - "8080:8080"
@@ -58,7 +58,7 @@ services:
     restart: unless-stopped
 
   airflow-scheduler:
-    image: apache/airflow:2.7.3
+    image: apache/airflow:3.3.1
     container_name: airflow-scheduler
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
