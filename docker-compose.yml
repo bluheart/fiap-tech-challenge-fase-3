@@ -29,7 +29,7 @@ services:
       - shared
     restart: unless-stopped
 
-    airflow-apiserver:                      
+  airflow-apiserver:                      
     image: apache/airflow:3.3.1       
     container_name: airflow-apiserver
     ports:
