@@ -34,12 +34,10 @@ services:
     image: apache/airflow:3.3.1
     container_name: airflow-init
     environment:
+      - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS=admin:admin
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
-      - AIRFLOW__CORE__AUTH_MANAGER=airflow.auth.managers.simple.simple_auth_manager.SimpleAuthManager
-      - AIRFLOW__SIMPLE_AUTH_MANAGER__PASSWORDS__ADMIN=admin
-      - AIRFLOW__SIMPLE_AUTH_MANAGER__ROLES__ADMIN=admin
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./shared:/shared
@@ -47,8 +45,7 @@ services:
       - ./airflow/logs:/opt/airflow/logs
     # This command runs migrations and creates the admin user
     command: >
-      bash -c "airflow db migrate &&
-               airflow users create --username admin --firstname Admin --lastname User --role Admin --email admin@example.com --password admin"
+      bash -c "airflow db migrate"
     networks:
       - shared
     restart: "no"  # Ensures it runs only once
@@ -64,9 +61,6 @@ services:
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
       - AIRFLOW__CORE__EXECUTION_API_SERVER_URL=http://airflow-apiserver:8080/execution/
-      - AIRFLOW__CORE__AUTH_MANAGER=airflow.auth.managers.simple.simple_auth_manager.SimpleAuthManager
-      - AIRFLOW__SIMPLE_AUTH_MANAGER__PASSWORDS__ADMIN=admin
-      - AIRFLOW__SIMPLE_AUTH_MANAGER__ROLES__ADMIN=admin
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./shared:/shared
@@ -91,9 +85,6 @@ services:
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
       - AIRFLOW__CORE__EXECUTION_API_SERVER_URL=http://airflow-apiserver:8080/execution/
-      - AIRFLOW__CORE__AUTH_MANAGER=airflow.auth.managers.simple.simple_auth_manager.SimpleAuthManager
-      - AIRFLOW__SIMPLE_AUTH_MANAGER__PASSWORDS__ADMIN=admin
-      - AIRFLOW__SIMPLE_AUTH_MANAGER__ROLES__ADMIN=admin
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./shared:/shared
