@@ -21,14 +21,10 @@ from airflow import DAG
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-ROOT_PATH = Path(__file__).parent.absolute().parent.parent
-# Caminhos compartilhados (volumes Docker)
-SHARED_DATA_PATH = ROOT_PATH / 'shared/data'
-SHARED_MODELS_PATH = ROOT_PATH / 'shared/models'
-SHARED_VECTORIZERS_PATH = ROOT_PATH / 'shared/vectorizers'
-LOCAL_DATA_PATH = '/opt/airflow/data/laudos_treinamento.csv'
-
-print()
+SHARED_DATA_PATH = Path('/shared/data')
+SHARED_MODELS_PATH = Path('/shared/models')
+SHARED_VECTORIZERS_PATH = Path('/shared/vectorizers')
+LOCAL_DATA_PATH = Path('/opt/airflow/data/laudos_treinamento.csv')
 
 # Garantir que os diretórios existam
 for path in [SHARED_DATA_PATH, SHARED_MODELS_PATH, SHARED_VECTORIZERS_PATH]:
