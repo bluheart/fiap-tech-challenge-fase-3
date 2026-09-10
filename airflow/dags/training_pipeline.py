@@ -34,9 +34,6 @@ default_args = {
     'owner': 'medical_ai_team',
     'depends_on_past': False,
     'start_date': datetime(2026, 9, 1, tzinfo=ZoneInfo("America/Sao_Paulo")),
-    'email': ['alerts@hospital.com'],
-    'email_on_failure': True,
-    'email_on_retry': False,
     'retries': 2,
     'retry_delay': timedelta(minutes=5),
 }
@@ -329,28 +326,24 @@ start = EmptyOperator(
 load_data_task = PythonOperator(
     task_id='load_data',
     python_callable=load_data,
-    provide_context=True,
     dag=dag
 )
 
 preprocess_task = PythonOperator(
     task_id='preprocess_data',
     python_callable=preprocess_data,
-    provide_context=True,
     dag=dag
 )
 
 train_task = PythonOperator(
     task_id='train_model',
     python_callable=train_model,
-    provide_context=True,
     dag=dag
 )
 
 evaluate_task = PythonOperator(
     task_id='evaluate_model',
     python_callable=evaluate_model,
-    provide_context=True,
     dag=dag
 )
 
