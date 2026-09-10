@@ -29,8 +29,30 @@ services:
       - shared
     restart: unless-stopped
 
+
+  airflow-init:
+    image: apache/airflow:3.3.1
+    container_name: airflow-init
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./shared:/shared
+      - ./data:/opt/airflow/data
+      - ./airflow/logs:/opt/airflow/logs
+    # This command runs migrations and creates the admin user
+    command: >
+      bash -c "airflow db migrate &&
+               airflow users create --username admin --firstname Admin --lastname User --role Admin --email admin@example.com --password admin"
+    networks:
+      - shared
+    restart: "no"  # Ensures it runs only once
+
+
   airflow-apiserver:                      
-    image: apache/airflow:3.3.1       
+    image: apache/airflow:3.3.1         
     container_name: airflow-apiserver
     ports:
       - "8080:8080"
@@ -49,11 +71,15 @@ services:
       - shared
     depends_on:
       - airflow-scheduler
+      - airflow-init
     restart: unless-stopped
+
 
   airflow-scheduler:
     image: apache/airflow:3.3.1
     container_name: airflow-scheduler
+    depends_on:
+      - airflow-init
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
@@ -69,9 +95,12 @@ services:
       - shared
     restart: unless-stopped
 
+
   airflow-dag-processor:
     image: apache/airflow:3.3.1
     container_name: airflow-dag-processor
+    depends_on:
+      - airflow-init
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
@@ -85,6 +114,7 @@ services:
     networks:
       - shared
     restart: unless-stopped
+
 
   prometheus:
     image: prom/prometheus:latest
@@ -105,6 +135,7 @@ services:
     depends_on:
       - api
     restart: unless-stopped
+
 
   grafana:
     image: grafana/grafana:latest
