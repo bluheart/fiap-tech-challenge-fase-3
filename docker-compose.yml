@@ -37,6 +37,9 @@ services:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
+      - AIRFLOW__CORE__AUTH_MANAGER=airflow.auth.managers.simple.simple_auth_manager.SimpleAuthManager
+      - AIRFLOW__SIMPLE_AUTH_MANAGER__PASSWORDS__ADMIN=admin
+      - AIRFLOW__SIMPLE_AUTH_MANAGER__ROLES__ADMIN=admin
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./shared:/shared
@@ -61,6 +64,9 @@ services:
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
       - AIRFLOW__CORE__EXECUTION_API_SERVER_URL=http://airflow-apiserver:8080/execution/
+      - AIRFLOW__CORE__AUTH_MANAGER=airflow.auth.managers.simple.simple_auth_manager.SimpleAuthManager
+      - AIRFLOW__SIMPLE_AUTH_MANAGER__PASSWORDS__ADMIN=admin
+      - AIRFLOW__SIMPLE_AUTH_MANAGER__ROLES__ADMIN=admin
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./shared:/shared
@@ -85,6 +91,9 @@ services:
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
       - AIRFLOW__CORE__EXECUTION_API_SERVER_URL=http://airflow-apiserver:8080/execution/
+      - AIRFLOW__CORE__AUTH_MANAGER=airflow.auth.managers.simple.simple_auth_manager.SimpleAuthManager
+      - AIRFLOW__SIMPLE_AUTH_MANAGER__PASSWORDS__ADMIN=admin
+      - AIRFLOW__SIMPLE_AUTH_MANAGER__ROLES__ADMIN=admin
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./shared:/shared
