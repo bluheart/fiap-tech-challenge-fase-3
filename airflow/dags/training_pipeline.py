@@ -38,6 +38,18 @@ default_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
+def _to_python(obj):
+    import numpy as np
+    if isinstance(obj, dict):
+        return {k: _to_python(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_to_python(v) for v in obj]
+    if isinstance(obj, (np.integer,)):
+        return int(obj)
+    if isinstance(obj, (np.floating,)):
+        return float(obj)
+    return obj
+
 def load_data(**context):
     """Carregar dados médicos para treinamento do Parquet compartilhado"""
     try:
@@ -209,7 +221,7 @@ def train_model(**context):
             'model_path': shared_model_path,
             'vectorizer_path': shared_vectorizer_path
         }
-        
+        metadata = _to_python(metadata)
         with open(f"{SHARED_MODELS_PATH}/metadata.json", 'w') as f:
             json.dump(metadata, f, indent=2)
         

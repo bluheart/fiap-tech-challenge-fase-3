@@ -95,14 +95,11 @@ async def get_model_status():
 
 @app.post("/reload-model", response_model=ReloadResponse)
 async def reload_model():
-    """Reload model from disk"""
     if classifier is None:
         raise HTTPException(status_code=503, detail="Classifier not initialized")
-    
     try:
         success = classifier.reload_model()
         MODEL_LOADED.set(1 if success else 0)
-        
         return ReloadResponse(
             success=success,
             message="Model reloaded successfully" if success else "Failed to reload model",
