@@ -2,11 +2,7 @@ FROM apache/airflow:2.7.3-python3.11
 
 USER root
 
-# Trocar para mirrors brasileiros antes do apt-get
-RUN sed -i 's|deb.debian.org|mirror.usp.br|g' /etc/apt/sources.list.d/debian.sources && \
-    sed -i 's|security.debian.org|mirror.usp.br|g' /etc/apt/sources.list.d/debian.sources
-
-# Agora instalar as dependências do sistema
+# Instalar dependências do sistema diretamente (sem trocar mirror)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
