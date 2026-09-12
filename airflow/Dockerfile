@@ -1,9 +1,12 @@
-# Use Airflow 2.7.3 with Python 3.11 (the latest supported version)
 FROM apache/airflow:2.7.3-python3.11
 
 USER root
 
-# Install system-level PostgreSQL dev libraries (needed for psycopg2)
+# Trocar para mirrors brasileiros antes do apt-get
+RUN sed -i 's|deb.debian.org|mirror.usp.br|g' /etc/apt/sources.list.d/debian.sources && \
+    sed -i 's|security.debian.org|mirror.usp.br|g' /etc/apt/sources.list.d/debian.sources
+
+# Agora instalar as dependências do sistema
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
@@ -11,7 +14,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 USER airflow
 
-# Install Python dependencies including the PostgreSQL driver
 RUN pip install --no-cache-dir \
     "datasets>=2.16.0" \
     "pandas>=2.0.0" \
