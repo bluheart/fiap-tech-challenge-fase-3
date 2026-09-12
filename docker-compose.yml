@@ -129,7 +129,7 @@ services:
       - AIRFLOW__API_AUTH__JWT_SECRET="your-secret-key-here"
     volumes:
       - ./airflow/dags:/opt/airflow/dags
-      - shared_data:shared
+      - shared_data:/shared
       - ./data:/opt/airflow/data
       - ./airflow/logs:/opt/airflow/logs
     command: dag-processor
