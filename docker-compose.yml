@@ -57,7 +57,6 @@ services:
       - ./shared:/shared
       - ./data:/opt/airflow/data
       - ./airflow/logs:/opt/airflow/logs
-      - airflow_db:/opt/airflow/db
     command: >
       bash -c "airflow db migrate"
     networks:
