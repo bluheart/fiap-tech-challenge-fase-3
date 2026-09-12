@@ -66,23 +66,24 @@ services:
         condition: service_healthy
     restart: "no"
 
-  airflow-webserver:
+  airflow-apiserver:
     build:
       context: ./airflow
       dockerfile: Dockerfile
-    container_name: airflow-webserver
+    container_name: airflow-apiserver
     ports:
       - "8080:8080"
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
+      - AIRFLOW__CORE__EXECUTION_API_SERVER_URL=http://airflow-apiserver:8080/execution/
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./shared:/shared
       - ./data:/opt/airflow/data
       - ./airflow/logs:/opt/airflow/logs
-    command: webserver
+    command: api-server
     networks:
       - shared
     depends_on:
@@ -99,12 +100,36 @@ services:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
+      - AIRFLOW__CORE__EXECUTION_API_SERVER_URL=http://airflow-apiserver:8080/execution/
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./shared:/shared
       - ./data:/opt/airflow/data
       - ./airflow/logs:/opt/airflow/logs
     command: scheduler
+    networks:
+      - shared
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  airflow-dag-processor:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    container_name: airflow-dag-processor
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
+      - AIRFLOW__CORE__EXECUTION_API_SERVER_URL=http://airflow-apiserver:8080/execution/
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./shared:/shared
+      - ./data:/opt/airflow/data
+      - ./airflow/logs:/opt/airflow/logs
+    command: dag-processor
     networks:
       - shared
     depends_on:
