@@ -23,6 +23,9 @@ def prepare_clinical_dataset():
 
     df_final = df[['text', 'classificacao']]
 
+    #pegando menos linhas para diminuir o tamanho do arquivo, para evitar large file no github
+    df_final = df_final.sample(n=200000)
+
     # Renomeia a coluna 'text' para 'texto' para corresponder ao esperado pela DAG
     df_final.rename(columns={'text': 'texto'}, inplace=True)
 
@@ -30,14 +33,12 @@ def prepare_clinical_dataset():
 
 
     output_path = script_dir.parent / 'shared/data'
-
-    output_path = script_dir.parent / 'data'
     
     output_path.mkdir(parents=True, exist_ok=True)
     # Salva como CSV
-    data_path = output_path / 'laudos_treinamento.csv'
+    data_path = output_path / 'laudos_treinamento.parquet'
 
-    df_final.to_csv(data_path, index=False)
+    df_final.to_parquet(data_path, index=False, compression='zstd')
     print(f"Dataset preparado e salvo em: {output_path}")
     print(f"Shape do dataset final: {df_final.shape}")
 

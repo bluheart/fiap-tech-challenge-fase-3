@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 SHARED_DATA_PATH = '/shared/data'
 SHARED_MODELS_PATH = '/shared/models'
 SHARED_VECTORIZERS_PATH = '/shared/vectorizers'
-LOCAL_DATA_PATH = '/opt/airflow/data/laudos_treinamento.csv'
+LOCAL_DATA_PATH = '/opt/airflow/data/laudos_treinamento.parquet'
 
 # Garantir que os diretórios existam
 for path in [SHARED_DATA_PATH, SHARED_MODELS_PATH, SHARED_VECTORIZERS_PATH]:
@@ -34,19 +34,28 @@ default_args = {
     'owner': 'medical_ai_team',
     'depends_on_past': False,
     'start_date': datetime(2026, 9, 1, tzinfo=ZoneInfo("America/Sao_Paulo")),
-    'email': ['alerts@hospital.com'],
-    'email_on_failure': True,
-    'email_on_retry': False,
     'retries': 2,
     'retry_delay': timedelta(minutes=5),
 }
 
+def _to_python(obj):
+    import numpy as np
+    if isinstance(obj, dict):
+        return {k: _to_python(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_to_python(v) for v in obj]
+    if isinstance(obj, (np.integer,)):
+        return int(obj)
+    if isinstance(obj, (np.floating,)):
+        return float(obj)
+    return obj
+
 def load_data(**context):
-    """Carregar dados médicos para treinamento do CSV compartilhado"""
+    """Carregar dados médicos para treinamento do Parquet compartilhado"""
     try:
         # Tentar carregar do volume compartilhado primeiro
-        if os.path.exists(SHARED_DATA_PATH + '/laudos_treinamento.csv'):
-            data_path = SHARED_DATA_PATH + '/laudos_treinamento.csv'
+        if os.path.exists(SHARED_DATA_PATH + '/laudos_treinamento.parquet'):
+            data_path = SHARED_DATA_PATH + '/laudos_treinamento.parquet'
             logger.info(f"Carregando dados do volume compartilhado: {data_path}")
         elif os.path.exists(LOCAL_DATA_PATH):
             data_path = LOCAL_DATA_PATH
@@ -55,26 +64,15 @@ def load_data(**context):
             raise FileNotFoundError("Arquivo de dados não encontrado em nenhum local")
         
         # Carregar dados
-        df = pd.read_csv(data_path)
+        df = pd.read_parquet(data_path)
         logger.info(f"Dados carregados: {len(df)} amostras")
         logger.info(f"Colunas: {df.columns.tolist()}")
         
         # Verificar colunas necessárias
-        required_columns = ['texto', 'target']
-        for col in required_columns:
-            if col not in df.columns:
-                # Tentar mapear colunas comuns
-                if col == 'texto' and 'text' in df.columns:
-                    df['texto'] = df['text']
-                elif col == 'texto' and 'laudo' in df.columns:
-                    df['texto'] = df['laudo']
-                elif col == 'texto' and 'descricao' in df.columns:
-                    df['texto'] = df['descricao']
-                else:
-                    raise ValueError(f"Coluna '{col}' não encontrada no dataset")
+        required_columns = ['texto', 'classificacao']
         
         # Salvar cópia no volume compartilhado para a API
-        df.to_csv(SHARED_DATA_PATH + '/laudos_treinamento.csv', index=False)
+        df.to_parquet(SHARED_DATA_PATH + '/laudos_treinamento.parquet', index=False)
         logger.info(f"Dados salvos no volume compartilhado: {SHARED_DATA_PATH}")
         
         # Salvar informações no contexto
@@ -223,7 +221,7 @@ def train_model(**context):
             'model_path': shared_model_path,
             'vectorizer_path': shared_vectorizer_path
         }
-        
+        metadata = _to_python(metadata)
         with open(f"{SHARED_MODELS_PATH}/metadata.json", 'w') as f:
             json.dump(metadata, f, indent=2)
         
@@ -310,7 +308,7 @@ dag = DAG(
     # Pipeline de Treinamento - Triagem Médica
     
     Esta DAG executa o pipeline completo de treinamento:
-    1. Carrega dados do CSV compartilhado
+    1. Carrega dados do Parquet compartilhado
     2. Pré-processa os dados
     3. Treina o modelo Random Forest
     4. Avalia o modelo
@@ -329,28 +327,24 @@ start = EmptyOperator(
 load_data_task = PythonOperator(
     task_id='load_data',
     python_callable=load_data,
-    provide_context=True,
     dag=dag
 )
 
 preprocess_task = PythonOperator(
     task_id='preprocess_data',
     python_callable=preprocess_data,
-    provide_context=True,
     dag=dag
 )
 
 train_task = PythonOperator(
     task_id='train_model',
     python_callable=train_model,
-    provide_context=True,
     dag=dag
 )
 
 evaluate_task = PythonOperator(
     task_id='evaluate_model',
     python_callable=evaluate_model,
-    provide_context=True,
     dag=dag
 )
 
