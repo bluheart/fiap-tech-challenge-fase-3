@@ -14,4 +14,3 @@ RUN pip install --no-cache-dir \
     "scikit-learn>=1.3.0" \
     "numpy>=1.24.0" \
     "pyarrow>=14.0.0" \
-    "psycopg2-binary" 
