@@ -43,29 +43,29 @@ services:
     restart: unless-stopped
 
   airflow-init:
-  build:
-    context: ./airflow
-    dockerfile: Dockerfile
-  container_name: airflow-init
-  environment:
-    - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS=admin:admin
-    - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-    - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
-    - AIRFLOW__CORE__LOAD_EXAMPLES=false
-  volumes:
-    - ./airflow/dags:/opt/airflow/dags
-    - ./shared:/shared
-    - ./data:/opt/airflow/data
-    - ./airflow/logs:/opt/airflow/logs
-    - airflow_db:/opt/airflow/db
-  command: >
-    bash -c "airflow db migrate"
-  networks:
-    - shared
-  depends_on:
-    postgres:
-      condition: service_healthy
-  restart: "no"
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    container_name: airflow-init
+    environment:
+      - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS=admin:admin
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./shared:/shared
+      - ./data:/opt/airflow/data
+      - ./airflow/logs:/opt/airflow/logs
+      - airflow_db:/opt/airflow/db
+    command: >
+      bash -c "airflow db migrate"
+    networks:
+      - shared
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
 
   airflow-webserver:
     build:
