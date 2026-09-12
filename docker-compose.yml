@@ -27,13 +27,9 @@ services:
       - PROMETHEUS_MULTIPROC_DIR=/tmp
       - MODEL_PATH=/shared/models/latest_model.pkl
     volumes:
-      # Volume compartilhado para modelos
       - ./shared:/shared
-      # Volume local para modelos (fallback)
       - ./models:/app/models
-      # Volume para dados
       - ./data:/app/data
-      # Volume para logs
       - ./logs:/app/logs
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -46,14 +42,12 @@ services:
       - shared
     restart: unless-stopped
 
-
   airflow-init:
     build:
       context: ./airflow
       dockerfile: Dockerfile
     container_name: airflow-init
     environment:
-      - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS=admin:admin
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
@@ -65,30 +59,27 @@ services:
       - ./shared:/shared
       - ./data:/opt/airflow/data
       - ./airflow/logs:/opt/airflow/logs
-      - airflow_db:/opt/airflow/db 
-    # This command runs migrations and creates the admin user
     command: >
-      bash -c "airflow db migrate"
+      bash -c "airflow db init &&
+               airflow users create --username admin --firstname Admin --lastname User --role Admin --email admin@example.com --password admin"
     networks:
       - shared
     depends_on:
       postgres:
         condition: service_healthy
-    restart: "no"  # Ensures it runs only once
+    restart: "no"
 
-
-  airflow-apiserver:                      
+  airflow-webserver:
     build:
       context: ./airflow
       dockerfile: Dockerfile
-    container_name: airflow-apiserver
+    container_name: airflow-webserver
     ports:
       - "8080:8080"
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
-      - AIRFLOW__CORE__EXECUTION_API_SERVER_URL=http://airflow-apiserver:8080/execution/
       - AIRFLOW__CORE__PARALLELISM=8
       - AIRFLOW__CORE__DAG_CONCURRENCY=8
       - AIRFLOW__CORE__MAX_ACTIVE_TASKS_PER_DAG=8
@@ -97,15 +88,13 @@ services:
       - ./shared:/shared
       - ./data:/opt/airflow/data
       - ./airflow/logs:/opt/airflow/logs
-      - airflow_db:/opt/airflow/db 
-    command: api-server
+    command: webserver
     networks:
       - shared
     depends_on:
       airflow-init:
         condition: service_completed_successfully
     restart: unless-stopped
-
 
   airflow-scheduler:
     build:
@@ -116,7 +105,6 @@ services:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
-      - AIRFLOW__CORE__EXECUTION_API_SERVER_URL=http://airflow-apiserver:8080/execution/
       - AIRFLOW__CORE__PARALLELISM=8
       - AIRFLOW__CORE__DAG_CONCURRENCY=8
       - AIRFLOW__CORE__MAX_ACTIVE_TASKS_PER_DAG=8
@@ -125,7 +113,6 @@ services:
       - ./shared:/shared
       - ./data:/opt/airflow/data
       - ./airflow/logs:/opt/airflow/logs
-      - airflow_db:/opt/airflow/db
     command: scheduler
     networks:
       - shared
@@ -133,35 +120,6 @@ services:
       airflow-init:
         condition: service_completed_successfully
     restart: unless-stopped
-
-
-  airflow-dag-processor:
-    build:
-      context: ./airflow
-      dockerfile: Dockerfile
-    container_name: airflow-dag-processor
-    environment:
-      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
-      - AIRFLOW__CORE__LOAD_EXAMPLES=false
-      - AIRFLOW__CORE__EXECUTION_API_SERVER_URL=http://airflow-apiserver:8080/execution/
-      - AIRFLOW__CORE__PARALLELISM=8
-      - AIRFLOW__CORE__DAG_CONCURRENCY=8
-      - AIRFLOW__CORE__MAX_ACTIVE_TASKS_PER_DAG=8
-    volumes:
-      - ./airflow/dags:/opt/airflow/dags
-      - ./shared:/shared
-      - ./data:/opt/airflow/data
-      - ./airflow/logs:/opt/airflow/logs
-      - airflow_db:/opt/airflow/db
-    command: dag-processor                   # ← Novo comando para processar DAGs
-    networks:
-      - shared
-    depends_on:
-      airflow-init:
-        condition: service_completed_successfully
-    restart: unless-stopped
-
 
   prometheus:
     image: prom/prometheus:latest
@@ -182,7 +140,6 @@ services:
     depends_on:
       - api
     restart: unless-stopped
-
 
   grafana:
     image: grafana/grafana:latest
@@ -206,7 +163,6 @@ services:
 volumes:
   prometheus_data:
   grafana_data:
-  airflow_db:
   postgres_data:
 
 networks:
