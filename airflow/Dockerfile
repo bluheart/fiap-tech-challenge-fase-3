@@ -1,5 +1,5 @@
 # Usar uma versão recente do Airflow que já corrigiu o bug do LocalExecutor
-FROM apache/airflow:slim-lates
+FROM apache/airflow:slim-latest
 
 USER root
 
