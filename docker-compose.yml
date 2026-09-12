@@ -27,7 +27,7 @@ services:
       - PROMETHEUS_MULTIPROC_DIR=/tmp
       - MODEL_PATH=/shared/models/latest_model.pkl
     volumes:
-      - ./shared:/shared
+      - shared_data:/shared
       - ./models:/app/models
       - ./data:/app/data
       - ./logs:/app/logs
@@ -54,7 +54,7 @@ services:
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
     volumes:
       - ./airflow/dags:/opt/airflow/dags
-      - ./shared:/shared
+      - shared_data:/shared
       - ./data:/opt/airflow/data
       - ./airflow/logs:/opt/airflow/logs
     command: >
@@ -81,7 +81,7 @@ services:
       - AIRFLOW__API_AUTH__JWT_SECRET="your-secret-key-here"
     volumes:
       - ./airflow/dags:/opt/airflow/dags
-      - ./shared:/shared
+      - shared_data:/shared
       - ./data:/opt/airflow/data
       - ./airflow/logs:/opt/airflow/logs
     command: api-server
@@ -105,7 +105,7 @@ services:
       - AIRFLOW__API_AUTH__JWT_SECRET="your-secret-key-here"
     volumes:
       - ./airflow/dags:/opt/airflow/dags
-      - ./shared:/shared
+      - shared_data:/shared
       - ./data:/opt/airflow/data
       - ./airflow/logs:/opt/airflow/logs
     command: scheduler
@@ -129,7 +129,7 @@ services:
       - AIRFLOW__API_AUTH__JWT_SECRET="your-secret-key-here"
     volumes:
       - ./airflow/dags:/opt/airflow/dags
-      - ./shared:/shared
+      - shared_data:shared
       - ./data:/opt/airflow/data
       - ./airflow/logs:/opt/airflow/logs
     command: dag-processor
@@ -183,6 +183,7 @@ volumes:
   prometheus_data:
   grafana_data:
   postgres_data:
+  shared_data:
 
 networks:
   monitoring:

@@ -38,25 +38,6 @@ class MedicalTextClassifier:
         if os.path.exists(shared_latest):
             self._load_model_from_path(shared_latest)
             return
-
-        # Prioridade 2: modelo versionado mais recente
-        if os.path.exists(self.shared_models_path):
-            model_files = list(Path(self.shared_models_path).glob("*_model.pkl"))
-            if model_files:
-                latest_model = max(model_files, key=os.path.getmtime)
-                self._load_model_from_path(str(latest_model))
-                return
-
-        # Prioridade 3: modelos locais
-        for candidate in [
-            f"{self.local_models_path}/classifier.joblib",
-            f"{self.local_models_path}/original_model.pkl",
-            f"{self.local_models_path}/latest_model.pkl",
-        ]:
-            if os.path.exists(candidate):
-                self._load_model_from_path(candidate)
-                return
-
         logger.warning("Nenhum modelo encontrado. API funcionará sem modelo.")
 
     def _load_model_from_path(self, model_path: str):
