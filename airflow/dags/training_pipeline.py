@@ -68,8 +68,6 @@ def load_data(**context):
         logger.info(f"Dados carregados: {len(df)} amostras")
         logger.info(f"Colunas: {df.columns.tolist()}")
         
-        # Verificar colunas necessárias
-        required_columns = ['texto', 'classificacao']
         
         # Salvar cópia no volume compartilhado para a API
         df.to_parquet(SHARED_DATA_PATH + '/laudos_treinamento.parquet', index=False)
