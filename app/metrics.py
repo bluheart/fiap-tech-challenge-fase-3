@@ -48,6 +48,32 @@ MODEL_PREDICTION_TIME = Histogram(
 )
 
 
+# Métricas específicas do backend ONNX
+ONNX_PREDICTIONS_TOTAL = Counter(
+    'onnx_model_predictions_total',
+    'Total number of ONNX model predictions',
+    ['prediction_class']
+)
+
+ONNX_PREDICTION_TIME = Histogram(
+    'onnx_model_prediction_time_seconds',
+    'Time taken for ONNX model prediction',
+    buckets=[0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5]
+)
+
+ONNX_MODEL_LOADED = Gauge(
+    'onnx_model_loaded',
+    'Whether the ONNX model is loaded (1) or not (0)'
+)
+
+# Comparativo de latência entre backends
+BACKEND_COMPARISON = Histogram(
+    'model_backend_prediction_seconds',
+    'Prediction time by backend (sklearn vs onnx)',
+    ['backend'],
+    buckets=[0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0]
+)
+
 def setup_metrics(app: FastAPI):
     @app.middleware("http")
     async def metrics_middleware(request: Request, call_next):
