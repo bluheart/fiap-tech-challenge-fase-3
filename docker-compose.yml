@@ -26,8 +26,6 @@ services:
     environment:
       - PROMETHEUS_MULTIPROC_DIR=/tmp
       - MODEL_PATH=/shared/models/latest_model.pkl
-      - LANG=en_US.UTF-8
-      - LC_ALL=en_US.UTF-8
     volumes:
       - ./shared:/shared
       - ./models:/app/models
