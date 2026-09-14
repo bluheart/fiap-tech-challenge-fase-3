@@ -78,22 +78,22 @@ docker compose up -d
 
 ```bash
 # endpoint predict
-curl -X POST "http://localhost:8000/predict"
-   -H "accept: application/json"
-   -H "Content-Type: application/json"
-   -d '{\"text\": \"paciente esta com dor no peito\"}'
+curl -X POST "http://localhost:8000/predict" \
+   -H "accept: application/json" \
+   -H "Content-Type: application/json" \
+   -d '{"text": "paciente esta com dor no peito"}'
 
 # endpoint predict-onnx
-curl -X POST "http://localhost:8000/predict-onnx"
-   -H "accept: application/json"
-   -H "Content-Type: application/json"
-   -d '{\"text\": \"paciente esta com dor no peito\"}'
+curl -X POST "http://localhost:8000/predict-onnx" \
+   -H "accept: application/json" \
+   -H "Content-Type: application/json" \
+   -d '{"text": "paciente esta com dor no peito"}'
 
 # endpoint benchmark compara as duas predicts
-curl -X POST "http://localhost:8000/benchmark"
-   -H "accept: application/json"
-   -H "Content-Type: application/json"
-   -d '{\"text\": \"paciente esta com dor no peito\"}'
+curl -X POST "http://localhost:8000/benchmark" \
+   -H "accept: application/json" \
+   -H "Content-Type: application/json" \
+   -d '{"text": "paciente esta com dor no peito"}'
 ```
 ## Teste de latência e comparação
 
